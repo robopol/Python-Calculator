@@ -2,393 +2,282 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Python Calculator</title>
     <!-- Favicon for Python Icon -->
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5968/5968350.png" type="image/png">
     <!-- Pyodide Script -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- External CSS styles -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Emergency CSS Fix for PC layout -->
     <style>
-        /* Basic styles for the page */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            color: var(--text-color);
-            background-color: var(--background-color);
-            transition: color 0.3s, background-color 0.3s;
-        }
-
-        /* Background with blurred fractal */
-        body::before {
-            content: "";
-            position: fixed;
-            top: -5px;
-            left: -5px;
-            width: calc(100% + 10px);
-            height: calc(100% + 10px);
-            background-image: url('https://www.poling.sk/fractals/fractal.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: -1;
-            filter: blur(15px);
-        }
-
-        /* Light mode */
-        body.light-mode {
-            --text-color: #333;
-            --background-color: #fff;
-            --button-bg: #808080;
-            --button-hover: #696969;
-            --button-text: #fff;
-            --input-bg: rgba(255, 255, 255, 0.8);
-            --result-bg: rgba(255, 255, 255, 0.8);
-            --calc-bg: rgba(255, 255, 255, 0.9);
-            --history-bg: rgba(255, 255, 255, 0.9);
-            --history-item-bg: rgba(240, 240, 240, 0.9);
-            --border-color: #ddd;
-        }
-
-        /* Dark mode */
-        body.dark-mode {
-            --text-color: #ddd;
-            --background-color: #1a1919;
-            --button-bg: #444;
-            --button-hover: #555;
-            --button-text: #fff;
-            --input-bg: rgba(46, 46, 46, 0.9);
-            --result-bg: rgba(46, 46, 46, 0.9);
-            --calc-bg: rgba(46, 46, 46, 0.9);
-            --history-bg: rgba(46, 46, 46, 0.9);
-            --history-item-bg: rgba(62, 62, 62, 0.9);
-            --border-color: #555;
-        }
-
-        .overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 16px;
-            min-height: 100vh;
-            box-sizing: border-box;
-            display: none; 
-        }
-
-        .container {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 16px;
-            box-sizing: border-box;
-            flex-wrap: wrap;
-        }
-
-        .calculator {
-            flex: 1 1 100%;
-            max-width: 650px;
-            background-color: var(--calc-bg);
-            padding: 16px;
-            border-radius: 10px;
-            box-sizing: border-box;
-            margin: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .calculator h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: var(--text-color);
-            font-size: 28px; /* Increased font size */
-        }
-
-        .calculator h1 img {
-            width: 40px; /* Icon size */
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-
-        .calculator input {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            box-sizing: border-box;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-        }
-
-        .calculator .buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4 columns */
-            grid-gap: 13px;
-        }
-
-        .buttons button {
-            padding: 8px; /* Smaller buttons */
-            font-size: 16px; /* Font size */
-            border: 0px solid var(--border-color);
-            border-radius: 5px;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            cursor: pointer;
-            transition: background-color 0.3s;
-            position: relative;
-        }
-
-        .buttons button:hover {
-            background-color: var(--button-hover);
-        }               
-
-        .buttons button.clear {
-            background-color: #FF6347;
-        }
-
-        .buttons button.equal {
-            grid-column: span 4; /* Span across 4 columns */
-            background-color: #28a745;
-        }
-
-        .result {
-            font-size: 16px;
-            margin-top: 10px;
-            color: var(--text-color);
-            background-color: var(--result-bg);
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid var(--border-color);
-            word-wrap: break-word;
-        }
-
-        .graph-container {
-            margin-top: 20px;
-        }
-
-        .graph-container input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            box-sizing: border-box;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-        }
-
-        .graph-container button {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .graph-container button:hover {
-            background-color: var(--button-hover);
-        }
-
-        .history {
-            flex: 1 1 100%;
-            max-width: 650px;
-            background-color: var(--history-bg);
-            padding: 20px;
-            border-radius: 10px;
-            box-sizing: border-box;
-            margin: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .history h2 {
-            text-align: center;
-            color: var(--text-color);
-        }
-
-        .history ul {
-            list-style-type: none;
-            padding: 0;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .history ul li {
-            background-color: var(--history-item-bg);
-            margin-bottom: 5px;
-            padding: 10px;
-            border-radius: 5px;
-            color: var(--text-color);
-            word-wrap: break-word;
-        }
-
-        #graph {
-            width: 100%;
-            height: auto;
-            margin-top: 10px;
-            border: 1px solid var(--border-color);
-            background-color: #fff;
-        }
-
-        /* Theme switch */
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .theme-toggle button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-left: 10px; /* Space between buttons */
-        }
-
-        .theme-toggle button:hover {
-            background-color: var(--button-hover);
-        }
-
-        /* Description text */
-        .description {
-            margin-top: 20px;
-            color: var(--text-color);
-            text-align: center;
-            background-color: var(--calc-bg);
-            padding: 10px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            font-size: 14px; /* Increased font size */
-            max-width: 650px;
-            margin-left: auto;
-            margin-right: auto; /* Center horizontally */
-        }
-
-        .description p {
-            margin: 5px 0;
-        }
-
-        /* Hiding scrollbars */
-        .history ul::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .history ul::-webkit-scrollbar-thumb {
-            background-color: var(--button-bg);
-            border-radius: 4px;
-        }
-
-        .history ul::-webkit-scrollbar-track {
-            background-color: var(--history-bg);
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .calculator, .history {
-                flex: 1 1 100%;
-                max-width: 100%;
+        /* Oprava rozloženia tlačidiel pre PC */
+        @media (min-width: 769px) {
+            .advanced-buttons {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                grid-gap: 12px !important;
+                width: 100% !important;
             }
-
-            .calculator .buttons {
-                grid-template-columns: repeat(4, 1fr);
+            
+            .advanced-buttons button {
+                margin: 0 !important;
+                width: auto !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
             }
-
-            .buttons button {
-                padding: 8px;
-                font-size: 14px;
+            
+            .mobile-header {
+                display: none !important;
             }
-
-            .calculator input, .graph-container input {
-                font-size: 16px;
-            }
-
-            .graph-container button {
-                font-size: 16px;
-            }
-
-            .theme-toggle button {
-                font-size: 16px;
+            
+            .advanced-toggle-mobile {
+                display: none !important;
             }
         }
-
-        @media (max-width: 480px) {
-            .buttons button {
-                padding: 6px; /* Further reduced on mobile */
-                font-size: 14px;
-            }
-
-            .calculator input, .graph-container input {
-                font-size: 16px;
-                padding: 10px;
-            }
-
-            .graph-container button {
-                font-size: 16px;
-                padding: 10px;
-            }
-
-            .theme-toggle button {
-                font-size: 16px;
-                padding: 10px 20px;
-            }
-        }
-
-        /* Loading spinner */
-        #loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column; /* Vertical alignment */
-        }
-
-        #loading-spinner {
-            border: 12px solid #f3f3f3;
-            border-top: 12px solid #3498db;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            animation: spin 1s linear infinite;
-        }
-
-        #loading-text {
-            margin-top: 20px; /* Space between spinner and text */
-            font-size: 24px; /* Increased font size */
-            color: white; /* White text for better visibility */
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
     </style>
 </head>
-<body class="light-mode">
+<body class="dark-mode">
+    <!-- Loading spinner -->
     <div id="loading">
         <div id="loading-spinner"></div>
         <div id="loading-text">Loading Python libraries...</div>
     </div>
+    
+    <!-- Mobile header -->
+    <div class="mobile-header">
+        <div class="mobile-controls">
+            <div class="left-controls">
+                <button class="instruction-btn" onclick="openInstructions()">
+                    <span>📚</span> Instructions
+                </button>
+                <button class="theme-toggle-mobile" onclick="toggleTheme()" id="themeToggleBtnMobile">
+                    <span class="theme-icon">🌙</span> Mode
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Instructions button -->
+    <button class="instruction-btn" onclick="openInstructions()">
+        <span>📚</span> Instructions
+    </button>
+    
+    <!-- Instructions modal -->
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeInstructions()">&times;</span>
+            
+            <h2 style="text-align: center; margin-bottom: 15px; color: var(--primary-color); font-size: 18px;">Python Calculator Instructions</h2>
+            
+            <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-size: 12px;">
+                <p><strong>Author:</strong> Ing. Robert Polak, <a href="https://robopol.sk" target="_blank">https://robopol.sk</a></p>            
+                <p>Calculator mainly uses the sympy and numpy libraries. web: <a href="https://docs.sympy.org/latest/index.html" target="_blank">https://docs.sympy.org/latest/index.html</a></p>            
+                <p>If you want to obtain the result in decimal form, it is necessary to input numbers in decimal format.</p>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Basic Operations</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">2 + 3 * 4</div>
+                        <button class="copy-btn" onclick="copyToInput('2 + 3 * 4')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">10 / 2.5</div>
+                        <button class="copy-btn" onclick="copyToInput('10 / 2.5')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">(3 + 4) * 2</div>
+                        <button class="copy-btn" onclick="copyToInput('(3 + 4) * 2')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">2**3 + 5</div>
+                        <button class="copy-btn" onclick="copyToInput('2**3 + 5')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">sqrt(16)</div>
+                        <button class="copy-btn" onclick="copyToInput('sqrt(16)')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Trigonometric Functions</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">sin(pi/2)</div>
+                        <button class="copy-btn" onclick="copyToInput('sin(pi/2)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">cos(pi)</div>
+                        <button class="copy-btn" onclick="copyToInput('cos(pi)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">tan(pi/4)</div>
+                        <button class="copy-btn" onclick="copyToInput('tan(pi/4)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">asin(1)</div>
+                        <button class="copy-btn" onclick="copyToInput('asin(1)')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Logarithms and Constants</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">log(100)/log(10)</div>
+                        <button class="copy-btn" onclick="copyToInput('log(100.0)/log(10.0)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">ln(e)</div>
+                        <button class="copy-btn" onclick="copyToInput('log(E)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">pi.evalf(10)</div>
+                        <button class="copy-btn" onclick="copyToInput('pi.evalf(10)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">E.evalf(10)</div>
+                        <button class="copy-btn" onclick="copyToInput('E.evalf(10)')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Calculus</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">diff(x**2, x)</div>
+                        <button class="copy-btn" onclick="copyToInput('diff(x**2, x)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">integrate(x**2, x)</div>
+                        <button class="copy-btn" onclick="copyToInput('integrate(x**2, x)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">integrate(sin(x), (x,0,pi))</div>
+                        <button class="copy-btn" onclick="copyToInput('integrate(sin(x), (x,0,pi))')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">limit(sin(x)/x, x, 0)</div>
+                        <button class="copy-btn" onclick="copyToInput('limit(sin(x)/x, x, 0)')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Algebra</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">solve(x**2 - 4, x)</div>
+                        <button class="copy-btn" onclick="copyToInput('solve(x**2 - 4, x)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">factor(x**3 - x**2 - x + 1)</div>
+                        <button class="copy-btn" onclick="copyToInput('factor(x**3 - x**2 - x + 1)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">expand((x+1)**3)</div>
+                        <button class="copy-btn" onclick="copyToInput('expand((x+1)**3)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">simplify((x**2+2*x+1)/(x+1))</div>
+                        <button class="copy-btn" onclick="copyToInput('simplify((x**2+2*x+1)/(x+1))')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Matrices</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">Matrix([[1, 2], [3, 4]])</div>
+                        <button class="copy-btn" onclick="copyToInput('Matrix([[1, 2], [3, 4]])')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">Matrix([[1, 2], [3, 4]]) * Matrix([[1, 0], [0, 1]])</div>
+                        <button class="copy-btn" onclick="copyToInput('Matrix([[1, 2], [3, 4]]) * Matrix([[1, 0], [0, 1]])')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Advanced Functions</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">factorial(5)</div>
+                        <button class="copy-btn" onclick="copyToInput('factorial(5)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">binomial(5, 2)</div>
+                        <button class="copy-btn" onclick="copyToInput('binomial(5, 2)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">gamma(4.5)</div>
+                        <button class="copy-btn" onclick="copyToInput('gamma(4.5)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">isprime(17)</div>
+                        <button class="copy-btn" onclick="copyToInput('isprime(17)')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Series and Approximations</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">exp(x).series(x, 0, 4)</div>
+                        <button class="copy-btn" onclick="copyToInput('exp(x).series(x, 0, 4)')">Copy</button>
+                    </div>
+                    <div class="example-container">
+                        <div class="example-text">sin(x).series(x, 0, 6)</div>
+                        <button class="copy-btn" onclick="copyToInput('sin(x).series(x, 0, 6)')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instruction-section">
+                <h3>Differential Equations</h3>
+                <div class="instructions-grid">
+                    <div class="example-container">
+                        <div class="example-text">dsolve(f(x).diff(x, x) + f(x), f(x))</div>
+                        <button class="copy-btn" onclick="copyToInput('dsolve(f(x).diff(x, x) + f(x), f(x))')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            
+            <p style="margin-top: 20px; font-style: italic; font-size: 13px;">For decimal results, make sure to use decimal notation (e.g., 2.0 instead of 2).</p>
+            
+            <div class="instruction-section" style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <h3>About</h3>
+                <p style="font-size: 13px;">Additional functionality may be available. For more details, please refer to the SymPy documentation.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculator is loaded immediately -->
     <div class="overlay">
         <div class="theme-toggle">
-            <button onclick="toggleTheme()">Dark/Light Mode</button>
-            <!-- Pridanie tlačidla "Randomize Color" -->
-            <button onclick="randomizeColors()">Randomize Color</button>
+            <button onclick="toggleTheme()" id="themeToggleBtn">
+                <span class="theme-icon">🌙</span>
+                <span class="theme-text">Mode</span>
+            </button>
+            <div class="color-schemes">
+                <button onclick="setColorScheme('default')" class="theme-scheme-btn active" data-scheme="default">Default</button>
+                <button onclick="setColorScheme('ocean')" class="theme-scheme-btn" data-scheme="ocean">Ocean</button>
+                <button onclick="setColorScheme('sunset')" class="theme-scheme-btn" data-scheme="sunset">Sunset</button>
+                <button onclick="setColorScheme('forest')" class="theme-scheme-btn" data-scheme="forest">Forest</button>
+            </div>
         </div>
         <div class="container">
             <div class="calculator">
@@ -396,8 +285,18 @@
                     <!-- Python Icon -->
                     <img src="https://cdn-icons-png.flaticon.com/512/5968/5968350.png" alt="Python Icon">
                     Python Calculator
+                    <!-- Graph button -->
+                    <button id="openGraphBtn" class="graph-button" title="Open function graph">
+                        <span class="button-icon">📊</span>
+                    </button>
                 </h1>
-                <input type="text" id="calc_input" placeholder="Enter expression" />
+                
+                <!-- Dual input-output field -->
+                <div class="input-output-container">
+                    <div class="calculation-result" id="calc_output">Result will appear here</div>
+                    <input type="text" id="calc_input" placeholder="Enter expression..." autocomplete="off" />
+                </div>
+                
                 <div class="buttons">
                     <!-- Digits and basic operations -->
                     <button class="digit" onclick="append_to_input('7')" title="Digit 7">7</button>
@@ -420,51 +319,53 @@
                     <button class="function" onclick="append_to_input('+')" title="Addition: +">+</button>
                     <button class="function clear" onclick="clear_input()" title="Clear input">C</button>
 
-                    <!-- Advanced functions -->
+                    <!-- Toggle button for advanced functions (visible only on mobile) -->
+                    <button class="advanced-toggle-mobile" onclick="toggleAdvancedButtons()">
+                        <span class="toggle-icon">▼</span> Advanced Functions
+                    </button>
+
+                    <!-- Basic functions that are always visible -->
                     <button class="function" onclick="append_to_input(',')" title="Comma">,</button> 
                     <button class="function" onclick="append_to_input('(')" title="Open parenthesis: (">(</button>
                     <button class="function" onclick="append_to_input(')')" title="Close parenthesis: )">)</button>
                     <button class="function" onclick="append_to_input('**')" title="Exponentiation: ** or ^">^</button>
-                    <button class="function" onclick="append_to_input('Mod(,)')" title="Modulo function: Mod(a,b)">mod</button>
-                    <button class="function" onclick="append_to_input('round(,)')" title="Round: round(x, n)">round</button>
-                    <button class="function" onclick="append_to_input('sqrt()')" title="Square root: sqrt(x)">√</button>
-                    <button class="function" onclick="append_to_input('abs()')" title="Absolute value: abs(x)">abs</button>
-                    
-                    <button class="function" onclick="append_to_input('2.7182818284590452353602874713527')" title="Euler's number ">e</button>                    
-                    <button class="function" onclick="append_to_input('(1+sqrt(5))/2')" title="Golden ratio: φ = (1+√5)/2">φ</button>
-                    <button class="function" onclick="append_to_input('0.5772156649015328606065120900824')" title="Euler-Mascheroni constant: γ ≈ 0.5772">γ</button>
-                    <button class="function" onclick="append_to_input('3.1415926535897932384626433832795')" title="π=3.1415..">π</button>
 
-                    <button class="function" onclick="append_to_input('factorial()')" title="Factorial: factorial(n)">fact</button>                                        
-                    <button class="function" onclick="append_to_input('log()/log(10.0)')" title="Logarithm base 10">log₁₀</button>
-                    <button class="function" onclick="append_to_input('log()')" title="Natural logarithm: ln(x) or log(x)">ln</button>
-                    <button class="function" onclick="append_to_input('log()/log(2.0)')" title="Logarithm base 2">log₂</button>
-                    
-                    <button class="function" onclick="append_to_input('sin()')" title="Sine: sin(x)">sin</button>
-                    <button class="function" onclick="append_to_input('cos()')" title="Cosine: cos(x)">cos</button>
+                    <!-- Advanced functions that can be hidden on mobile -->
+                    <div class="advanced-buttons" id="advancedButtons">
+                        <button class="function" onclick="append_to_input('Mod(,)')" title="Modulo function: Mod(a,b)">mod</button>
+                        <button class="function" onclick="append_to_input('round(,)')" title="Round: round(x, n)">round</button>
+                        <button class="function" onclick="append_to_input('sqrt()')" title="Square root: sqrt(x)">√</button>
+                        <button class="function" onclick="append_to_input('abs()')" title="Absolute value: abs(x)">abs</button>
+                        
+                        <button class="function" onclick="append_to_input('2.7182818284590452353602874713527')" title="Euler's number ">e</button>                    
+                        <button class="function" onclick="append_to_input('(1+sqrt(5))/2')" title="Golden ratio: φ = (1+√5)/2">φ</button>
+                        <button class="function" onclick="append_to_input('0.5772156649015328606065120900824')" title="Euler-Mascheroni constant: γ ≈ 0.5772">γ</button>
+                        <button class="function" onclick="append_to_input('3.1415926535897932384626433832795')" title="π=3.1415..">π</button>
 
-                    <button class="function" onclick="append_to_input('tan()')" title="Tangent: tan(x)">tan</button>
-                    <button class="function" onclick="append_to_input('asin()')" title="Arcsine: asin(x)">arcsin</button>
-                    <button class="function" onclick="append_to_input('acos()')" title="Arccosine: acos(x)">arccos</button>
-                    <button class="function" onclick="append_to_input('atan()')" title="Arctangent: atan(x)">arctan</button>
+                        <button class="function" onclick="append_to_input('factorial()')" title="Factorial: factorial(n)">fact</button>                                        
+                        <button class="function" onclick="append_to_input('log()/log(10.0)')" title="Logarithm base 10">log₁₀</button>
+                        <button class="function" onclick="append_to_input('log()')" title="Natural logarithm: ln(x) or log(x)">ln</button>
+                        <button class="function" onclick="append_to_input('log()/log(2.0)')" title="Logarithm base 2">log₂</button>
+                        
+                        <button class="function" onclick="append_to_input('sin()')" title="Sine: sin(x)">sin</button>
+                        <button class="function" onclick="append_to_input('cos()')" title="Cosine: cos(x)">cos</button>
+                        <button class="function" onclick="append_to_input('tan()')" title="Tangent: tan(x)">tan</button>
+                        <button class="function" onclick="append_to_input('asin()')" title="Arcsine: asin(x)">arcsin</button>
+                        <button class="function" onclick="append_to_input('acos()')" title="Arccosine: acos(x)">arccos</button>
+                        <button class="function" onclick="append_to_input('atan()')" title="Arctangent: atan(x)">arctan</button>
 
-                    <button class="function" onclick="append_to_input('sinh()')" title="Hyperbolic sine: sinh(x)">sinh</button>
-                    <button class="function" onclick="append_to_input('cosh()')" title="Hyperbolic cosine: cosh(x)">cosh</button>
-                    <button class="function" onclick="append_to_input('tanh()')" title="Hyperbolic tangent: tanh(x)">tanh</button>                    
-                    
-                    <button class="function" onclick="append_to_input('diff(f, x)')" title="Derivative: diff(x**2, x)">derivative</button>
-                    <button class="function" onclick="append_to_input('integrate(f, x)')" title="Integral: integrate(x**2, x)">integral</button>
-                    <button class="function" onclick="append_to_input('Matrix([[1, 2], [3, 4]])')" title="Matrix: Matrix([[1, 2], [3, 4]])">matrix</button>
-                    <button class="function" onclick="append_to_input('isprime()')" title="Check if number is prime: isprime(x)">isprime</button>
-                    <button class="function" onclick="append_to_input('solve(f, x)')" title="Solve: solve(x**2-4, x)">Solve</button>
+                        <button class="function" onclick="append_to_input('sinh()')" title="Hyperbolic sine: sinh(x)">sinh</button>
+                        <button class="function" onclick="append_to_input('cosh()')" title="Hyperbolic cosine: cosh(x)">cosh</button>
+                        <button class="function" onclick="append_to_input('tanh()')" title="Hyperbolic tangent: tanh(x)">tanh</button>                    
+                        
+                        <button class="function" onclick="append_to_input('diff(f, x)')" title="Derivative: diff(x**2, x)">derivative</button>
+                        <button class="function" onclick="append_to_input('integrate(f, x)')" title="Integral: integrate(x**2, x)">integral</button>
+                        <button class="function" onclick="append_to_input('Matrix([[1, 2], [3, 4]])')" title="Matrix: Matrix([[1, 2], [3, 4]])">matrix</button>
+                        <button class="function" onclick="append_to_input('isprime()')" title="Check if number is prime: isprime(x)">isprime</button>
+                        <button class="function" onclick="append_to_input('solve(f, x)')" title="Solve: solve(x**2-4, x)">Solve</button>
+                    </div>
+
                     <button class="function equal" onclick="calculate()" title="Calculate result">=</button>
-                </div>
-                <div class="result" id="result">Result will appear here</div>
-                <div class="graph-container">
-                    <h3>Function Graph</h3>
-                    <input type="text" id="graph_input" placeholder="Enter function, e.g., sin(x)" />
-                    <button onclick="plot_graph()" title="Plot function graph">Plot Graph</button>
-                    <img id="graph" src="" alt="Graph will appear here" />
                 </div>
             </div>
 
@@ -473,311 +374,151 @@
                 <ul id="history_list">
                     <!-- Calculation history -->
                 </ul>
+                <button id="clearHistoryBtn" onclick="clearHistory()" class="clear-history-btn">Clear History</button>
             </div>
-        </div>
-        <div class="description">
-            <p><strong>Author:</strong> Ing. Robert Polak, <a href="https://robopol.sk" target="_blank">https://robopol.sk</a></p>
-            <p>Calculator mainly uses the sympy and numpy libraries. web: <a href="https://docs.sympy.org/latest/index.html" target="_blank">https://docs.sympy.org/latest/index.html</a></p>            
-            <p>If you want to obtain the result in decimal form, it is necessary to input numbers in decimal format.</p>
-            <p><strong>Examples:</strong></p>
-            <ul style="list-style-type: disc; padding-left: 20px;">
-                <li>Decimal format: <code>log(52.0)/log(10.0)</code></li>
-                <li>Simplify: <code>simplify((2*x+3*x**2)*(5*x-10))</code></li>
-                <li>Expand equation: <code>expand((2*x+3*x**2)*(5*x-10))</code></li>                
-                <li>pi: <code>pi.evalf(100)</code></li>                
-                <li>Binomial coefficient: <code>binomial(n, k)</code></li>
-                <li>Gamma function: <code>gamma(z)</code></li>
-                <li>Limits: <code>limit(sin(x)/x, x, 0)</code></li>                                
-                <li>Derivative: <code>diff(x**3 + 2*x + 4, x)</code></li>
-                <li>Matrix: <code>Matrix([[1, 2], [3, 4]])+Matrix([[5, 4], [9, 11]])</code></li>
-                <li>Integral: <code>integrate(x**2 + sin(x), x)</code></li>
-                <li>Integral: <code>integrate(x**2 + sin(x), (x,0,10))</code></li>
-                <li>Series: <code>exp(x - 6).series(x, x0=6)</code></li>                               
-                <li>Solve equation: <code>solve(x**2 - 4+x + 10, x)</code></li>
-                <li>Differential Equations: <code>dsolve(f(x).diff(x)*(1 - sin(f(x))) - 1, f(x))</code></li>                
-            </ul>
-            <p>Equations must be in the form <code>f(x) = 0</code>.</p>
-            <p>The calculator uses various functions; it is necessary to check the documentation of the SymPy library.</p>
-            <p>This calculator leverages the power of Python to perform advanced mathematical computations, including working with large numbers, making it ideal for complex mathematical tasks.</p>
         </div>
     </div>
 
-    <script>        
-        function toggleTheme() {
-            let bodyClass = document.body.classList;
-            if (bodyClass.contains('light-mode')) {
-                bodyClass.remove('light-mode');
-                bodyClass.add('dark-mode');
-            } else {
-                bodyClass.remove('dark-mode');
-                bodyClass.add('light-mode');          }
+    <!-- Graph Modal -->
+    <div id="graphModal" class="graph-modal">
+        <div class="graph-modal-content">
+            <span class="close-graph" id="closeGraph">&times;</span>
+            <h2>Graph Function</h2>
             
+            <div class="graph-options">
+                <div class="range-inputs">
+                    <div class="range-group">
+                        <label for="x_min">X Min:</label>
+                        <input type="number" id="x_min" placeholder="-10" step="any">
+                    </div>
+                    <div class="range-group">
+                        <label for="x_max">X Max:</label>
+                        <input type="number" id="x_max" placeholder="10" step="any">
+                    </div>
+                    <div class="range-group">
+                        <label for="y_min">Y Min:</label>
+                        <input type="number" id="y_min" placeholder="auto" step="any">
+                    </div>
+                    <div class="range-group">
+                        <label for="y_max">Y Max:</label>
+                        <input type="number" id="y_max" placeholder="auto" step="any">
+                    </div>
+                </div>
+                
+                <div class="options-group">
+                    <div class="option-checkbox">
+                        <input type="checkbox" id="fill_option" checked>
+                        <label for="fill_option">Fill Area</label>
+                    </div>
+                    <div class="option-checkbox">
+                        <input type="checkbox" id="points_option" checked>
+                        <label for="points_option">Show Points</label>
+                    </div>
+                </div>
+            </div>
             
-            const variables = [
-                '--button-bg',
-                '--button-hover',
-                '--button-text',
-                '--calc-bg'
-            ];
-            variables.forEach(variable => {
-                document.body.style.removeProperty(variable);
-            });        
+            <div class="graph-input-row">
+                <input type="text" id="graph_input" placeholder="Enter function (e.g. sin(x))">
+                <button id="plotButton" onclick="plot_graph()">Plot</button>
+            </div>
             
-            const calcBg = getComputedStyle(document.body).getPropertyValue('--calc-bg');            
-            document.body.style.setProperty('--history-bg', calcBg);
-        }
+            <div class="graph-examples">
+                <h3>Graph Function Examples:</h3>
+                <ul class="examples-list">
+                    <li><code>sin(x)</code> - Sine function</li>
+                    <li><code>x**2</code> - Quadratic function</li>
+                    <li><code>exp(-x**2)</code> - Gaussian function</li>
+                    <li><code>sqrt(abs(x))</code> - Square root of absolute value</li>
+                    <li><code>1/x</code> - Hyperbolic function</li>
+                    <li><code>log(x)</code> - Logarithmic function</li>
+                    <li><code>tan(x)</code> - Tangent function</li>
+                    <li><code>x**3 - 4*x</code> - Cubic function</li>
+                </ul>
+                <p class="graph-tip">Tip: You can adjust the X and Y range to better visualize your function.</p>
+            </div>
+            
+            <div class="graph-container">
+                <img id="graph" src="" alt="" />
+            </div>
+            
+            <div class="graph-controls">
+                <button id="saveGraphBtn" onclick="saveGraph()">Save Graph</button>
+            </div>
+        </div>
+    </div>
 
-        function randomizeColors() {
-            const body = document.body;            
-            const variables = [
-                '--button-bg',
-                '--button-hover',
-                '--button-text'
-            ];
-            let calcBgColor; // Premenná pre uloženie náhodnej farby kalkulačky
+    <!-- External JavaScript file -->
+    <script src="script.js"></script>
+    
+    <!-- Emergency fix script for PC layout - direct DOM manipulation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            applyLayoutBasedOnScreenSize();
+        });
         
-            // Najprv nastavíme ostatné farby
-            variables.forEach(variable => {                
-                let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');             
-                body.style.setProperty(variable, randomColor);
-            });
+        // Aj pri zmene veľkosti okna
+        window.addEventListener('resize', function() {
+            applyLayoutBasedOnScreenSize();
+        });
         
-            // Generovanie náhodnej farby pre kalkulačku s ohľadom na alfa hodnotu
-            {
-                let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-                const currentValue = getComputedStyle(body).getPropertyValue('--calc-bg').trim();
-                let alpha = 0.9; // Predvolená alfa
-                if (currentValue.startsWith('rgba')) {
-                    const matches = currentValue.match(/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*([\d.]+)\)/);
-                    if (matches && matches[1]) {
-                        alpha = parseFloat(matches[1]);
-                    }
+        // Centralizovaná funkcia pre aplikáciu layoutu na základe veľkosti obrazovky
+        function applyLayoutBasedOnScreenSize() {
+            // Získame aktuálnu šírku okna
+            const windowWidth = window.innerWidth;
+            const isMobile = windowWidth <= 768;
+            
+            // Nastavenie prvkov na základe veľkosti obrazovky
+            const advancedButtons = document.getElementById('advancedButtons');
+            const mobileHeader = document.querySelector('.mobile-header');
+            const advancedToggle = document.querySelector('.advanced-toggle-mobile');
+            
+            if (!isMobile) { // Desktop layout
+                // 1. Nastavíme grid layout pre pokročilé tlačidlá
+                if (advancedButtons) {
+                    advancedButtons.style.display = 'grid';
+                    advancedButtons.style.gridTemplateColumns = 'repeat(4, 1fr)';
+                    advancedButtons.style.gridGap = '12px';
+                    advancedButtons.style.width = '100%';
+                    
+                    // 2. Nastavíme štýl všetkých tlačidiel v gridu
+                    const allButtons = advancedButtons.querySelectorAll('button');
+                    allButtons.forEach(function(btn) {
+                        btn.style.margin = '0';
+                        btn.style.width = 'auto';
+                        btn.style.display = 'flex';
+                        btn.style.justifyContent = 'center';
+                        btn.style.alignItems = 'center';
+                    });
                 }
-                calcBgColor = `rgba(${parseInt(randomColor.substr(1,2),16)}, ${parseInt(randomColor.substr(3,2),16)}, ${parseInt(randomColor.substr(5,2),16)}, ${alpha})`;
-        
-                // Nastavenie pre kalkulačku
-                body.style.setProperty('--calc-bg', calcBgColor);
-        
-                // Nastavenie aj pre calculation history pozadie
-                body.style.setProperty('--history-bg', calcBgColor);
+                
+                // 3. Skryjeme mobilné prvky
+                if (mobileHeader) mobileHeader.style.display = 'none';
+                if (advancedToggle) advancedToggle.style.display = 'none';
+            } else { // Mobile layout
+                // 1. Zobrazíme mobilné prvky
+                if (mobileHeader) mobileHeader.style.display = 'block';
+                if (advancedToggle) advancedToggle.style.display = 'block';
+                
+                // 2. Vždy skryjeme pokročilé tlačidlá pri načítaní na mobilnom zariadení
+                if (advancedButtons) {
+                    advancedButtons.style.display = 'none';
+                }
             }
         }
         
-        document.addEventListener("DOMContentLoaded", function() {
-            main();
-        });
-
-        async function main() {
-            try {
-                // Load Pyodide
-                let pyodide = await loadPyodide();
-                // Load required packages
-                await pyodide.loadPackage(['numpy', 'matplotlib', 'sympy']);
-                // Run Python code
-                pyodide.runPython(`
-import sympy as sp
-from js import document, window
-from sympy import *
-import numpy as np
-import matplotlib.pyplot as plt
-
-history_list = document.getElementById("history_list")
-result_div = document.getElementById("result")
-
-# Define multiple symbols (all letters except e, i, I)
-symbols_str = 'a b c d f g h j k l m n o p q r s t u v w x y z A B C D F G H J K L M N O P Q R S T U V W X Y Z'
-symbols = sp.symbols(symbols_str)
-globals().update(dict(zip(symbols_str.split(), symbols)))
-
-def append_to_input(value):
-    input_field = document.getElementById("calc_input")
-    input_field.value += str(value)
-
-def clear_input():
-    input_field = document.getElementById("calc_input")
-    input_field.value = ""
-    result_div.innerHTML = "Result will appear here"
-
-def calculate():
-    input_field = document.getElementById("calc_input")
-    expression = input_field.value
-    
-    try:        
-        # Parse the expression
-        expr = sp.sympify(expression)
-        # Safe environment for eval
-        allowed_names = {
-            'abs': Abs,
-            'pi': sp.pi,
-            'e': sp.E,
-            'phi': (1 + sp.sqrt(5)) / 2,
-            'gamma': 0.5772156649015328606065120900824,
-            'sqrt': sp.sqrt,
-            'ln': sp.ln,
-            'log': sp.log,            
-            'sin': sp.sin,
-            'cos': sp.cos,
-            'tan': sp.tan,
-            'arcsin': sp.asin,
-            'arccos': sp.acos,
-            'arctan': sp.atan,
-            'sinh': sp.sinh,
-            'cosh': sp.cosh,
-            'tanh': sp.tanh,            
-            'factorial': factorial,            
-            'round': round,                        
-            'Mod': sp.Mod,           
-            'isprime': sp.isprime,
-            'integral': sp.integrate, 
-            'derivative': sp.diff, 
-            'matrix': sp.Matrix,                
-            're': sp.re,   
-            'im': sp.im,   
-            'arg': sp.arg, 
-            'complex': complex,
-            'I': sp.I,
-            'i': sp.I,
-            'x': x, 'y': y, 'z': z,
-        }
-        # Add all defined symbols to allowed_names
-        for sym in symbols:
-            allowed_names[str(sym)] = sym
-
-        # Initialize result
-        result = None
-        result_str = "" 
-
-        expression_lower = expression.lower()
-
-        # Check for specific commands in the expression
-        if "diff" in expression_lower:            
-            # Derivative operation
-            result = expr
-        elif "integrate" or "integral" in expression_lower:
-            # Integral operation
-            result = expr
-        elif "matrix" or "eye" or "zeros" or "ones" or "diag" or "det" or "nullspace" or "columnspace" or "eigenvals" or "diagonalize" in expression_lower:            
-            matrix_expr = expression.replace('Matrix', 'sp.Matrix') 
-            result = eval(matrix_expr)
-        elif "solve" or "solveset" or "linsolve" or "nonlinsolve" in expression_lower:
-            # Solve equation
-            result = expr
-        elif "isprime" or "apart" or "collect" or "cancel" or "factor" or "expand" or "simplify" or "subs" or "evalf" in expression_lower:
-            result = expr        
-        elif "limit" in expression_lower:            
-            result = expr
-        elif "series" or "expand_log" or "logcombine" or "expand_log" or "expand_trig" or "trigsimp" in expression_lower:            
-            result = expr
-        elif "binomial" or "gamma" or "combsimp" or "gammasimp" or "expand_func" or "hyperexpand" in expression_lower:            
-            result = expr        
-        elif "dsolve" in expression_lower:
-            result = expr       
-        else:            
-            # Check if the expression contains any defined symbols
-            if any(symbol in expr.free_symbols for symbol in symbols):
-                # Perform symbolic operations
-                simplified_expr = sp.simplify(expr)
-                expanded_expr = sp.expand(expr)
-                # Prepare the result string for display 
-                result_str += f"Simplified expression: {simplified_expr}<br>"               
-                result_str += f"Expanded expression: {expanded_expr}<br>"
-                result_div.innerHTML = result_str
-                return  # Exit after handling symbolic expression
-            else:
-                # Evaluate numerically if no symbols are present
-                result = eval(expression, {"__builtins__": None}, allowed_names)                        
-                
-        if result is not None:
-            result_div.innerHTML = f"Result: {result}"
-        else:
-            result_div.innerHTML = "Error: Undefined result"
-        
-        add_to_history(expression, result)
-    
-    except Exception as e:
-        result_div.innerHTML = f"Error: {e}"
-
-def add_to_history(expression, result):
-    li = document.createElement("li")
-    li.innerHTML = f"{expression} = {result}"
-    history_list.appendChild(li)
-
-def plot_graph():
-    input_field = document.getElementById("graph_input")
-    expression = input_field.value
-    try:
-        x = np.linspace(-10, 10, 400)
-        allowed_names = {}
-        allowed_names.update(vars(np))
-        allowed_names.update({
-            'x': x,
-            'abs': np.abs,
-            'pi': np.pi,
-            'phi': (1 + np.sqrt(5)) / 2,
-            'gamma': 0.5772156649,
-            'sqrt': np.sqrt,
-            'ln': np.log,
-            'log10': np.log10,
-            'log2': np.log2,
-            'sin': np.sin,
-            'cos': np.cos,
-            'tan': np.tan,
-            'arcsin': np.arcsin,
-            'arccos': np.arccos,
-            'arctan': np.arctan,
-            'sinh': np.sinh,
-            'cosh': np.cosh,
-            'tanh': np.tanh,
-            'exp': np.exp,
-            'floor': np.floor,
-            'ceil': np.ceil,
-            'sign': np.sign,
-            'mod': np.mod,
-        })
-
-        y = eval(expression, {"__builtins__": None}, allowed_names)
-        plt.figure()
-        plt.plot(x, y)
-        plt.grid(True)
-        plt.xlabel('x')
-        plt.ylabel('y')
-        plt.title(f'Function Graph: y = {expression}')
-        import io
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        buf.seek(0)
-        import base64
-        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-        buf.close()
-        plt.close()
-        img_uri = "data:image/png;base64," + img_base64
-        graph_img = document.getElementById("graph")
-        graph_img.src = img_uri
-    except Exception as e:
-        window.alert(f"Error: {e}")
-`);
-
-                // Map JavaScript functions to Python
-                window.append_to_input = pyodide.globals.get('append_to_input');
-                window.clear_input = pyodide.globals.get('clear_input');
-                window.calculate = pyodide.globals.get('calculate');
-                window.plot_graph = pyodide.globals.get('plot_graph');
-
-                // Add event listener for the Enter key
-                let calcInput = document.getElementById("calc_input");
-                calcInput.addEventListener("keydown", function(event) {
-                    if (event.key === "Enter") {
-                        event.preventDefault(); // Prevent new line
-                        calculate();
-                    }
-                });
-
-                // Hide loading spinner and show calculator
-                document.getElementById("loading").style.display = "none";
-                document.querySelector(".overlay").style.display = "block";
-            } catch (error) {
-                console.error("Error while loading Pyodide or libraries:", error);
-                alert("An error occurred while loading the required libraries. Please try again.");
+        // Funkcia pre prepínanie zobrazenia pokročilých tlačidiel na mobilných zariadeniach
+        function toggleAdvancedButtons() {
+            var advancedButtons = document.getElementById('advancedButtons');
+            var toggleIcon = document.querySelector('.toggle-icon');
+            
+            if (advancedButtons.style.display === 'none' || advancedButtons.style.display === '') {
+                advancedButtons.style.display = 'grid';
+                advancedButtons.style.gridTemplateColumns = 'repeat(4, 1fr)'; // Zmena na štyri stĺpce
+                advancedButtons.style.gap = '8px';
+                toggleIcon.textContent = '▲';
+            } else {
+                advancedButtons.style.display = 'none';
+                toggleIcon.textContent = '▼';
             }
         }
     </script>
