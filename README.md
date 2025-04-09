@@ -1,7 +1,7 @@
 # Python Calculator Web App
 
 This project is a fully client-side Python calculator web application that runs in your browser using [Pyodide](https://pyodide.org). It leverages powerful Python libraries like [Sympy](https://docs.sympy.org/latest/index.html), [NumPy](https://numpy.org), and [Matplotlib](https://matplotlib.org) to perform advanced mathematical computations, ranging from basic arithmetic to symbolic manipulation and graph plotting.
-
+![Python calculator](assets/screencapture-calculator.png)
 ## Features
 
 ### Interactive Calculator Interface
